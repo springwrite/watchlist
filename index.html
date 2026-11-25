@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Watchlist</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Watchlist">
+<meta name="theme-color" content="#0A1618">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-512.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+  html, body { margin: 0; height: 100%; background: #0A1618; color: #EEF5F5; font-family: -apple-system, system-ui, sans-serif; }
+  /* Die App beginnt unter der Statusleiste – darüber bleibt es dunkel */
+  #app { position: fixed; left: 0; right: 0; bottom: 0; top: env(safe-area-inset-top); width: 100%; height: calc(100% - env(safe-area-inset-top)); border: 0; background: #0A1618; }
+  #setup { display: none; padding: calc(env(safe-area-inset-top) + 40px) 24px 24px; max-width: 420px; margin: 0 auto; }
+  #setup h1 { font-size: 24px; margin: 0 0 8px; }
+  #setup p { color: #97AEB1; font-size: 15px; line-height: 1.45; }
+  #setup input { width: 100%; box-sizing: border-box; height: 48px; border-radius: 12px; border: 1px solid #1C3136; background: #15292E; color: #EEF5F5; padding: 0 14px; font-size: 16px; }
+  #setup button { margin-top: 12px; width: 100%; height: 48px; border: 0; border-radius: 24px; background: #FF7A62; color: #2A0A04; font-size: 16px; font-weight: 600; }
+</style>
+</head>
+<body>
+<iframe id="app" title="Watchlist" allow="clipboard-write; web-share" hidden></iframe>
+<form id="setup">
+  <h1>Watchlist</h1>
+  <p>Gib einmal deinen App-Schlüssel ein (APP_KEY aus den Skripteigenschaften). Er wird nur auf diesem Gerät gespeichert.</p>
+  <input id="key" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Schlüssel" aria-label="Schlüssel">
+  <button type="submit">Öffnen</button>
+</form>
+<script>
+  // ▼▼▼ Hier deine Web-App-URL einfügen (endet auf /exec) ▼▼▼
+  const APP_URL = 'HIER_DEINE_WEB_APP_URL_EINFUEGEN';
+  // ▲▲▲ Das ist die einzige Zeile, die du anpassen musst ▲▲▲
+
+  function getKey() {
+    const fromHash = decodeURIComponent(location.hash.replace(/^#(k=)?/, '')).trim();
+    if (fromHash) { try { localStorage.setItem('wl-key', fromHash); } catch (e) {} return fromHash; }
+    try { return localStorage.getItem('wl-key') || ''; } catch (e) { return ''; }
+  }
+
+  function start(key) {
+    const q = new URLSearchParams(location.search).get('q') || '';
+    const src = APP_URL + '?k=' + encodeURIComponent(key) + '&wrap=1' + (q ? '&q=' + encodeURIComponent(q) : '');
+    const f = document.getElementById('app');
+    f.src = src;
+    f.hidden = false;
+    document.getElementById('setup').style.display = 'none';
+  }
+
+  const key = getKey();
+  if (key) start(key);
+  else {
+    const form = document.getElementById('setup');
+    form.style.display = 'block';
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const k = document.getElementById('key').value.trim();
+      if (!k) return;
+      try { localStorage.setItem('wl-key', k); } catch (er) {}
+      history.replaceState(null, '', location.pathname + location.search + '#' + encodeURIComponent(k));
+      start(k);
+    });
+  }
+</script>
+</body>
+</html>
